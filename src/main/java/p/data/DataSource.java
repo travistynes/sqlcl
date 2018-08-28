@@ -20,10 +20,14 @@ import org.springframework.beans.factory.annotation.Value;
 public class DataSource {
 
 	private static final Logger log = LoggerFactory.getLogger(DataSource.class);
+	
+	@Value("${db.url}")
+	private String url;
 
 	@Bean
 	@ConfigurationProperties(prefix = "db")
 	public javax.sql.DataSource pgDS() {
+		log.info("Database: " + url + "\n");
 		javax.sql.DataSource ds =  DataSourceBuilder.create().build();
 
 		return ds;
