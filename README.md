@@ -52,4 +52,14 @@ Time your query execution:
 
 ```time query.sql | db```
 
+You can create multiple properties files of the form **application-profileName.properties** to specify connections to different databases. For example, given the following properties files:
+
+* application-dev.properties
+* application-prod.properties
+
+You can query either database with:
+
+* ```cat query.sql | db dev```
+* ```cat query.sql | db prod```
+
 Sqlcl is a small tool that does one thing well, and works best when chained together with other commands (see: [Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy)).
