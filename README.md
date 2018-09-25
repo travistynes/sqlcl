@@ -63,3 +63,5 @@ You can query either database with:
 * ```cat query.sql | db prod```
 
 Sqlcl is a small tool that tries to do one thing well, and works best when chained together with other commands (see: [Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy)).
+
+This code is free to use for any purpose.
