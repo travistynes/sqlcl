@@ -48,9 +48,12 @@ public class MainTest {
 	@Autowired
 	private DataSource dataSource;
 	
+	@Autowired
+	private SqlExecutor sqlExecutor;
+
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		// Add data to stdin.
+		// Add data to stdin for the CommandLineRunner to process.
 		System.setIn(IOUtils.toInputStream("select current_timestamp ts", "UTF-8"));
 	}
 
@@ -71,30 +74,37 @@ public class MainTest {
 	}
 
 	@Test
-	public void databaseConnection() throws Exception {
-		try(Connection c = dataSource.getConnection()) {
-			int msgs = 3, count = 0;
+	public void select() throws Exception {
+		int msgs = 3;
 
+		try(Connection c = dataSource.getConnection()) {
 			try(PreparedStatement ps = c.prepareStatement("insert into a (msg) values (?)")) {
 				for(int a = 0; a < msgs; a++) {
 					ps.setString(1, "Message " + a);
 					ps.executeUpdate();
 				}
 			}
-
-			try(PreparedStatement ps = c.prepareStatement("select msg, ts from a")) {
-				try(ResultSet rs = ps.executeQuery()) {
-					while(rs.next()) {
-						count++;
-						//log.info(rs.getString("msg") + ": " +  rs.getString("ts"));
-					}
-				}
-			}
-
-			assertEquals(msgs, count);
 		}
+
+		String sql = "select msg, ts from a";
+		int rows = sqlExecutor.execute(sql);
+
+		assertEquals(msgs, rows);
 	}
 
+	@Test
+	public void update() throws Exception {
+		String sql = "insert into a (msg) values('Test message 1'),('Test message 2')";
+		int rows = sqlExecutor.execute(sql);
+
+		assertEquals(2, rows);
+		
+		sql = "delete from a where msg = 'Test message 1'";
+		rows = sqlExecutor.execute(sql);
+
+		assertEquals(1, rows);
+	}
+	
 	@Test
 	public void queryFromFile() throws Exception {
 		try(Connection c = dataSource.getConnection()) {
