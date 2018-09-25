@@ -17,7 +17,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.sql.DataSource;
-import org.h2.jdbcx.JdbcConnectionPool;
 import org.junit.BeforeClass;
 import org.junit.AfterClass;
 import org.junit.After;
