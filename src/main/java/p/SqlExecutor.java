@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.ArrayList;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 @Component
 public class SqlExecutor {
@@ -18,6 +19,9 @@ public class SqlExecutor {
 
 	@Autowired
 	private DataSource dataSource;
+
+	@Value("${fs:,}")
+	private String fieldSeparator;
 
 	/*
 	 * Executes the sql statement.
@@ -34,22 +38,28 @@ public class SqlExecutor {
 				ResultSetMetaData m = rs.getMetaData();
 
 				int cc = m.getColumnCount();
-				List<String> cols = new ArrayList<>();
-				for(int i = 1; i < m.getColumnCount() + 1; i++) {
-					String colName = m.getColumnName(i).toLowerCase();
-					cols.add(colName);
+				String columnList = "";
+
+				for(int i = 1; i < cc + 1; i++) {
+					columnList += m.getColumnName(i).toLowerCase() + (i < cc ? fieldSeparator : "");
 				}
 
+				StringBuilder rowData = new StringBuilder();
 				while(rs.next()) {
 					rows++;
-					for(String col : cols) {
-						log.info(col + ": " + rs.getString(col));
+					for(int i = 1; i < cc + 1; i++) {
+						rowData.append(rs.getString(i) + (i < cc ? fieldSeparator : ""));
 					}
 
-					log.info("----------\n");
+					rowData.append("\n");
 				}
 
-				log.info(rows == 0 ? "No data." : (rows + " row(s)"));
+				if(rows > 0) {
+					log.info(columnList);
+					log.info(rowData.toString());
+				} else {
+					log.info("No data.");
+				}
 			} else {
 				rows = ps.getUpdateCount();
 

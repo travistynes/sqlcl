@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false">
-	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+	<appender name="example" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
 			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p %C.%M\(\):%L - %m%n</pattern>
 		</encoder>
 	</appender>
 
-	<root level="info">
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="p.SqlExecutor" level="info" />
+
+	<!-- Turn off all logging (children can override) -->
+	<root level="off">
 		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>

@@ -91,7 +91,7 @@
 					<toolchains>
 						<jdk>
 							<!-- Specify jdk version to search toolchains.xml for a matching jdk -->
-							<version>10</version>
+							<version>11</version>
 						</jdk>
 					</toolchains>
 				</configuration>
