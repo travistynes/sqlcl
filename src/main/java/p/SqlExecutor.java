@@ -23,6 +23,9 @@ public class SqlExecutor {
 	@Value("${fs:,}")
 	private String fieldSeparator;
 
+	@Value("${flushSize:50}")
+	private int flushSize;
+
 	/*
 	 * Executes the sql statement.
 	 * Returns the number of rows selected or updated.
@@ -47,17 +50,32 @@ public class SqlExecutor {
 				StringBuilder rowData = new StringBuilder();
 				while(rs.next()) {
 					rows++;
+
+					if(rows == 1) {
+						// Write columns.
+						log.info(columnList);
+					}
+
 					for(int i = 1; i < cc + 1; i++) {
 						rowData.append(rs.getString(i) + (i < cc ? fieldSeparator : ""));
 					}
 
-					rowData.append("\n");
+					if(rows % flushSize == 0) {
+						// Write records.
+						log.info(rowData.toString());
+						rowData = new StringBuilder();
+					} else {
+						rowData.append("\n");
+					}
 				}
 
-				if(rows > 0) {
-					log.info(columnList);
+				if(rows % flushSize > 0) {
+					// Write remaining records.
+					rowData.deleteCharAt(rowData.length() - 1); // Delete last newline char.
 					log.info(rowData.toString());
-				} else {
+				}
+
+				if(rows == 0) {
 					log.info("No data.");
 				}
 			} else {
