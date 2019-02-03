@@ -2,7 +2,7 @@
 
 Sqlcl is a Java application built with maven. It is meant to be used as a command line tool to query any database that has a JDBC driver, which is most relational databases.
 
-This is especially useful when you do not have access to the database, but you do have SSH access to a machine that has access to the database.
+This is useful when you want to query a database on the command line, over SSH, or don't have a graphical tool available.
 
 #### Build
 
