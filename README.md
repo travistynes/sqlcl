@@ -59,14 +59,18 @@ You can create multiple properties files of the form **application-profileName.p
 
 You can query either database with:
 
-```cat query.sql | db --env=dev```
-```cat query.sql | db --env=prod```
+```
+cat query.sql | db --env=dev
+cat query.sql | db --env=prod
+```
 
 Query database metadata (list tables, describe table columns, and indices):
 
-```db --tables=schema```
-```db --describe=schema.table```
-```db --index=schema.table```
+```
+db --tables=schema
+db --describe=schema.table
+db --index=schema.table
+```
 
 Sqlcl is a small tool that tries to do one thing well, and works best when chained together with other commands (see: [Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy)).
 
