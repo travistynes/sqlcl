@@ -23,6 +23,9 @@ public class SqlExecutor {
 	@Autowired
 	private DataSource dataSource;
 
+	@Value("${spring.profiles.active}")
+	private String profile;
+
 	// List tables in schema
 	@Value("${tables:#{null}}")
 	private String tables;
