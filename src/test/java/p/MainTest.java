@@ -86,7 +86,7 @@ public class MainTest {
 		}
 
 		String sql = "select msg, ts from a";
-		int rows = sqlExecutor.execute(sql);
+		int rows = sqlExecutor.query(sql);
 
 		assertEquals(msgs, rows);
 	}
@@ -94,12 +94,12 @@ public class MainTest {
 	@Test
 	public void update() throws Exception {
 		String sql = "insert into a (msg) values('Test message 1'),('Test message 2')";
-		int rows = sqlExecutor.execute(sql);
+		int rows = sqlExecutor.query(sql);
 
 		assertEquals(2, rows);
 		
 		sql = "delete from a where msg = 'Test message 1'";
-		rows = sqlExecutor.execute(sql);
+		rows = sqlExecutor.query(sql);
 
 		assertEquals(1, rows);
 	}
