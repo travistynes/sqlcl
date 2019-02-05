@@ -14,8 +14,8 @@
 
 	<logger name="p.SqlExecutor" level="info" />
 
-	<!-- Turn off all logging (children can override) -->
-	<root level="info">
+	<!-- Set log level (children can override) -->
+	<root level="warn">
 		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>
