@@ -9,12 +9,14 @@ import javax.sql.DataSource;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSetMetaData;
 import java.sql.JDBCType;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.apache.commons.io.IOUtils;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class SqlExecutor {
@@ -54,9 +56,13 @@ public class SqlExecutor {
 		} else if(index != null) {
 			this.listIndex();
 		} else {
-			String sql = IOUtils.toString(System.in, "UTF-8");
+			String sql = IOUtils.toString(System.in, StandardCharsets.UTF_8);
 			this.query(sql);
 		}
+	}
+
+	private List<String> getStatements(String in) {
+		return Arrays.asList(in.split(";"));
 	}
 
 	/*
@@ -200,25 +206,35 @@ public class SqlExecutor {
 	}
 
 	/*
-	 * Executes the sql statement.
+	 * Executes the sql statements.
 	 */
-	public int query(String sql) throws Exception {
-		int rows = 0;
+	public void query(String sql) throws Exception {
+		List<String> statements = getStatements(sql);
 
-		try(Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-			boolean results = ps.execute();
+		try(Connection c = dataSource.getConnection()) {
+			for(int a = 0; a < statements.size(); a++) {
+				String statement = statements.get(a).trim();
 
-			if(results) {
-				ResultSet rs = ps.getResultSet();
-				rows = dumpResults(rs);
-			} else {
-				rows = ps.getUpdateCount();
+				if(statement.length() == 0) {
+					continue;
+				}
 
-				log.info("Updated rows: " + rows);
+				log.info("----------------\n" + statement);
+
+				try(PreparedStatement ps = c.prepareStatement(statement)) {
+					boolean results = ps.execute();
+
+					if(results) {
+						ResultSet rs = ps.getResultSet();
+						dumpResults(rs);
+					} else {
+						int affectedRows = ps.getUpdateCount();
+
+						log.info("Affected rows: " + affectedRows);
+					}
+				}
 			}
 		}
-
-		return rows;
 	}
 
 	private int dumpResults(ResultSet rs) throws Exception {
