@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.apache.commons.io.IOUtils;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 @Component
 public class SqlExecutor {
@@ -228,15 +230,29 @@ public class SqlExecutor {
 				log.info("----------------\n" + statement);
 
 				try(PreparedStatement ps = c.prepareStatement(statement)) {
+					long start = System.currentTimeMillis();
+
 					boolean results = ps.execute();
 
+					long stop = System.currentTimeMillis();
+					Duration queryDuration = Duration.of(stop - start, ChronoUnit.MILLIS);
+
 					if(results) {
+						start = System.currentTimeMillis();
+
 						ResultSet rs = ps.getResultSet();
 						dumpResults(rs);
+
+						stop = System.currentTimeMillis();
+						Duration fetchDuration = Duration.of(stop - start, ChronoUnit.MILLIS);
+						log.info("----------------");
+						log.info("Query: " + queryDuration.toString() + ", Fetch: " + fetchDuration.toString());
 					} else {
 						int affectedRows = ps.getUpdateCount();
 
 						log.info("Affected rows: " + affectedRows);
+						log.info("----------------");
+						log.info("Duration: " + queryDuration.toString());
 					}
 				} catch(Exception e) {
 					/*
