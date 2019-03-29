@@ -241,12 +241,12 @@ public class SqlExecutor {
 						start = System.currentTimeMillis();
 
 						ResultSet rs = ps.getResultSet();
-						dumpResults(rs);
+						int rows = dumpResults(rs);
 
 						stop = System.currentTimeMillis();
 						Duration fetchDuration = Duration.of(stop - start, ChronoUnit.MILLIS);
 						log.info("----------------");
-						log.info("Query: " + queryDuration.toString() + ", Fetch: " + fetchDuration.toString());
+						log.info("Rows: " + rows + ", Query: " + queryDuration.toString() + ", Fetch: " + fetchDuration.toString());
 					} else {
 						int affectedRows = ps.getUpdateCount();
 
