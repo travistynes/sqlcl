@@ -35,7 +35,7 @@ public class SqlExecutor {
 	// Describe table schema
 	@Value("${describe:#{null}}")
 	private String describe;
-	//
+
 	// List table indices
 	@Value("${index:#{null}}")
 	private String index;
@@ -43,6 +43,10 @@ public class SqlExecutor {
 	// Output field separator.
 	@Value("${fs:,}")
 	private String fieldSeparator;
+
+	// Result set direction (row list or columns).
+	@Value("${dir:row}")
+	private String resultSetDirection;
 
 	// Write records to output after reaching limit.
 	@Value("${flushSize:50}")
@@ -212,6 +216,8 @@ public class SqlExecutor {
 		List<String> statements = getStatements(sql);
 
 		try(Connection c = dataSource.getConnection()) {
+			c.setAutoCommit(false);
+
 			for(int a = 0; a < statements.size(); a++) {
 				String statement = statements.get(a).trim();
 
@@ -232,8 +238,22 @@ public class SqlExecutor {
 
 						log.info("Affected rows: " + affectedRows);
 					}
+				} catch(Exception e) {
+					/*
+					 * Try-with-resources will ensure the connection object is closed
+					 * before catch and finally run, so we need to handle rollback here
+					 * instead of within a catch/finally on the connection's try block.
+					 */
+					c.rollback();
+					log.info("Transaction rolled back.");
+
+					throw e;
+				} finally {
+					c.setAutoCommit(true);
 				}
 			}
+
+			c.commit();
 		}
 	}
 
@@ -243,10 +263,13 @@ public class SqlExecutor {
 		ResultSetMetaData m = rs.getMetaData();
 
 		int cc = m.getColumnCount();
+		List<String> columns = new ArrayList<>();
 		String columnList = "";
 
 		for(int i = 1; i < cc + 1; i++) {
-			columnList += m.getColumnName(i).toLowerCase() + (i < cc ? fieldSeparator : "");
+			String columnName = m.getColumnName(i).toLowerCase();
+			columns.add(columnName);
+			columnList += columnName + (i < cc ? fieldSeparator : "");
 		}
 
 		StringBuilder rowData = new StringBuilder();
@@ -254,12 +277,24 @@ public class SqlExecutor {
 			rows++;
 
 			if(rows == 1) {
-				// Write columns.
-				log.info(columnList);
+				log.info("\nResults:\n");
+
+				if(resultSetDirection.equals("row")) {
+					// Write columns.
+					log.info(columnList);
+				}
 			}
 
 			for(int i = 1; i < cc + 1; i++) {
-				rowData.append(rs.getString(i) + (i < cc ? fieldSeparator : ""));
+				if(resultSetDirection.equals("row")) {
+					rowData.append(rs.getString(i) + (i < cc ? fieldSeparator : ""));
+				} else {
+					if(i == 1) {
+						rowData.append((rows == 1 ? "" : "\n") + "[Row " + rows + "]\n");
+					}
+
+					rowData.append(columns.get(i - 1) + ": " + rs.getString(i) + "\n");
+				}
 			}
 
 			if(rows % flushSize == 0) {
@@ -267,7 +302,9 @@ public class SqlExecutor {
 				log.info(rowData.toString());
 				rowData = new StringBuilder();
 			} else {
-				rowData.append("\n");
+				if(resultSetDirection.equals("row")) {
+					rowData.append("\n");
+				}
 			}
 		}
 
@@ -278,7 +315,7 @@ public class SqlExecutor {
 		}
 
 		if(rows == 0) {
-			log.info("No data.");
+			log.info("\nNo data.");
 		}
 
 		return rows;

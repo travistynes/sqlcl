@@ -15,6 +15,10 @@ public class CLR implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		sqlExecutor.execute();
+		try {
+			sqlExecutor.execute();
+		} catch(Exception e) {
+			log.error("Error.", e);
+		}
 	}
 }
