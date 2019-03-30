@@ -233,7 +233,7 @@ public class SqlExecutor {
 						continue;
 					}
 
-					log.info("----------------\n" + statement);
+					log.info((a > 0 ? "================\n" : "") + statement);
 
 					try(PreparedStatement ps = c.prepareStatement(statement)) {
 						long start = System.currentTimeMillis();
@@ -256,9 +256,8 @@ public class SqlExecutor {
 						} else {
 							int affectedRows = ps.getUpdateCount();
 
-							log.info("Affected rows: " + affectedRows);
 							log.info("----------------");
-							log.info("Duration: " + queryDuration.toString());
+							log.info("Affected rows: " + affectedRows + ", Duration: " + queryDuration.toString());
 						}
 					}
 				}
@@ -268,6 +267,7 @@ public class SqlExecutor {
 				c.rollback();
 				log.info("Transaction rolled back.");
 
+				throw e;
 			} finally {
 				c.setAutoCommit(true);
 			}
@@ -329,10 +329,6 @@ public class SqlExecutor {
 			// Write remaining records.
 			rowData.deleteCharAt(rowData.length() - 1); // Delete last newline char.
 			log.info(rowData.toString());
-		}
-
-		if(rows == 0) {
-			log.info("\nNo data.");
 		}
 
 		return rows;
