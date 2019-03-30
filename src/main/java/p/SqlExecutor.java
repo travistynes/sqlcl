@@ -220,56 +220,57 @@ public class SqlExecutor {
 		try(Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 
-			for(int a = 0; a < statements.size(); a++) {
-				String statement = statements.get(a).trim();
+			/*
+			 * Try-with-resources will ensure the connection object is closed
+			 * before catch and finally run, so we need this try block in order
+			 * to call commit and rollback.
+			 */
+			try {
+				for(int a = 0; a < statements.size(); a++) {
+					String statement = statements.get(a).trim();
 
-				if(statement.length() == 0) {
-					continue;
-				}
-
-				log.info("----------------\n" + statement);
-
-				try(PreparedStatement ps = c.prepareStatement(statement)) {
-					long start = System.currentTimeMillis();
-
-					boolean results = ps.execute();
-
-					long stop = System.currentTimeMillis();
-					Duration queryDuration = Duration.of(stop - start, ChronoUnit.MILLIS);
-
-					if(results) {
-						start = System.currentTimeMillis();
-
-						ResultSet rs = ps.getResultSet();
-						int rows = dumpResults(rs);
-
-						stop = System.currentTimeMillis();
-						Duration fetchDuration = Duration.of(stop - start, ChronoUnit.MILLIS);
-						log.info("----------------");
-						log.info("Rows: " + rows + ", Query: " + queryDuration.toString() + ", Fetch: " + fetchDuration.toString());
-					} else {
-						int affectedRows = ps.getUpdateCount();
-
-						log.info("Affected rows: " + affectedRows);
-						log.info("----------------");
-						log.info("Duration: " + queryDuration.toString());
+					if(statement.length() == 0) {
+						continue;
 					}
-				} catch(Exception e) {
-					/*
-					 * Try-with-resources will ensure the connection object is closed
-					 * before catch and finally run, so we need to handle rollback here
-					 * instead of within a catch/finally on the connection's try block.
-					 */
-					c.rollback();
-					log.info("Transaction rolled back.");
 
-					throw e;
-				} finally {
-					c.setAutoCommit(true);
+					log.info("----------------\n" + statement);
+
+					try(PreparedStatement ps = c.prepareStatement(statement)) {
+						long start = System.currentTimeMillis();
+
+						boolean results = ps.execute();
+
+						long stop = System.currentTimeMillis();
+						Duration queryDuration = Duration.of(stop - start, ChronoUnit.MILLIS);
+
+						if(results) {
+							start = System.currentTimeMillis();
+
+							ResultSet rs = ps.getResultSet();
+							int rows = dumpResults(rs);
+
+							stop = System.currentTimeMillis();
+							Duration fetchDuration = Duration.of(stop - start, ChronoUnit.MILLIS);
+							log.info("----------------");
+							log.info("Rows: " + rows + ", Query: " + queryDuration.toString() + ", Fetch: " + fetchDuration.toString());
+						} else {
+							int affectedRows = ps.getUpdateCount();
+
+							log.info("Affected rows: " + affectedRows);
+							log.info("----------------");
+							log.info("Duration: " + queryDuration.toString());
+						}
+					}
 				}
-			}
 
-			c.commit();
+				c.commit();
+			} catch(Exception e) {
+				c.rollback();
+				log.info("Transaction rolled back.");
+
+			} finally {
+				c.setAutoCommit(true);
+			}
 		}
 	}
 
