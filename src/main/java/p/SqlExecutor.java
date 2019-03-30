@@ -50,6 +50,10 @@ public class SqlExecutor {
 	@Value("${dir:row}")
 	private String resultSetDirection;
 
+	// Print statement before results.
+	@Value("${printStatement:true}")
+	private boolean printStatement;
+
 	// Write records to output after reaching limit.
 	@Value("${flushSize:50}")
 	private int flushSize;
@@ -226,14 +230,21 @@ public class SqlExecutor {
 			 * to call commit and rollback.
 			 */
 			try {
-				for(int a = 0; a < statements.size(); a++) {
-					String statement = statements.get(a).trim();
+				for(int statementIdx = 0; statementIdx < statements.size(); statementIdx++) {
+					String statement = statements.get(statementIdx).trim();
 
 					if(statement.length() == 0) {
 						continue;
 					}
 
-					log.info((a > 0 ? "================\n" : "") + statement);
+					if(statementIdx > 0) {
+						// Print statement separator from previous results.
+						log.info("================================");
+					}
+
+					if(printStatement) {
+						log.info(statement);
+					}
 
 					try(PreparedStatement ps = c.prepareStatement(statement)) {
 						long start = System.currentTimeMillis();
@@ -251,12 +262,20 @@ public class SqlExecutor {
 
 							stop = System.currentTimeMillis();
 							Duration fetchDuration = Duration.of(stop - start, ChronoUnit.MILLIS);
-							log.info("----------------");
+							if(rows > 0 || printStatement) {
+								// Separate results (or statement with empty results) from stats.
+								log.info("--------------------------------");
+							}
+
 							log.info("Rows: " + rows + ", Query: " + queryDuration.toString() + ", Fetch: " + fetchDuration.toString());
 						} else {
 							int affectedRows = ps.getUpdateCount();
 
-							log.info("----------------");
+							if(printStatement) {
+								// Separate statement from stats.
+								log.info("--------------------------------");
+							}
+
 							log.info("Affected rows: " + affectedRows + ", Duration: " + queryDuration.toString());
 						}
 					}
@@ -294,7 +313,10 @@ public class SqlExecutor {
 			rows++;
 
 			if(rows == 1) {
-				log.info("\nResults:\n");
+				if(printStatement) {
+					// Separate statement from results.
+					log.info("--------------------------------");
+				}
 
 				if(resultSetDirection.equals("row")) {
 					// Write columns.
