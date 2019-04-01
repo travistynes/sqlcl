@@ -27,9 +27,9 @@ Create a **config** directory in the application root with the following files:
 
 Update application.properties with the connection information for your database. The logback.xml file can be changed to enable additional logging to suit your needs.
 
-Run: ```java -Dloader.path="./lib" -jar ./sqlcl-x.x.jar```
+#### How to use
 
-You can also run from maven without building: ```mvn spring-boot:run```
+Run: ```java -Dloader.path="./lib" -jar ./sqlcl-x.x.jar```
 
 The db.sh file is provided to make invoking Sqlcl easier:
 
@@ -37,14 +37,12 @@ The db.sh file is provided to make invoking Sqlcl easier:
 
 Edit the [db.sh](https://github.com/travistynes/sqlcl/blob/master/db.sh) script to set the correct Java location.
 
-You can add the application to your PATH and create a symlink so it behaves like a regular linux command:
+You can add the application to your PATH and create a symlink so it behaves like a regular linux command. This is how I use it, and is very convenient:
 
 ```
 export PATH=$PATH:/path/to/sqlcl
 ln -s db.sh db
 ```
-
-#### How to use
 
 Sqlcl reads the query from stdin and writes the result to stdout:
 
