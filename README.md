@@ -6,24 +6,15 @@ This is useful when you want to query a database on the command line, over SSH, 
 
 #### Build
 
+Create a .mavenrc file in your home directory if you don't have one, and add JAVA_HOME to tell maven which jdk to use:
+
+```
+JAVA_HOME=/path/to/jdk
+```
+
 Build: ```mvn package```
 
-Run:
-
-```java -Dloader.path="./lib" -jar ./sqlcl-1.0.jar```
-
-You can also run from maven without building: ```mvn spring-boot:run```
-
-The db.sh file is provided to make invoking Sqlcl easier:
-
-```./db.sh```
-
-You can add the application to your PATH and create a symlink so it behaves like a regular linux command:
-
-```
-export PATH=$PATH:/path/to/sqlcl
-ln -s db.sh db
-```
+This produces the application jar file at ./target/sqlcl-x.x.jar.
 
 #### Configure
 
@@ -36,7 +27,22 @@ Create a **config** directory in the application root with the following files:
 
 Update application.properties with the connection information for your database. The logback.xml file can be changed to enable additional logging to suit your needs.
 
+Run: ```java -Dloader.path="./lib" -jar ./sqlcl-x.x.jar```
+
+You can also run from maven without building: ```mvn spring-boot:run```
+
+The db.sh file is provided to make invoking Sqlcl easier:
+
+```./db.sh```
+
 Edit the [db.sh](https://github.com/travistynes/sqlcl/blob/master/db.sh) script to set the correct Java location.
+
+You can add the application to your PATH and create a symlink so it behaves like a regular linux command:
+
+```
+export PATH=$PATH:/path/to/sqlcl
+ln -s db.sh db
+```
 
 #### How to use
 
@@ -48,14 +54,16 @@ Or save your query in a file and pipe it into Sqlcl, and pipe the result to anot
 
 ```cat query.sql | db | vim -```
 
-Time your query execution:
+Or
 
-```time query.sql | db```
+```db < query.sql | vim - ```
+
+#### Properties
 
 You can create multiple properties files of the form **application-profileName.properties** to specify connections to different databases. For example, given the following properties files:
 
-* application-dev.properties
-* application-prod.properties
+* config/application-dev.properties
+* config/application-prod.properties
 
 You can query either database with:
 
@@ -63,6 +71,10 @@ You can query either database with:
 cat query.sql | db --env=dev
 cat query.sql | db --env=prod
 ```
+
+By default, Sqlcl will use the config/application.properties file if the --env option is not specified.
+
+#### Database metadata
 
 Query database metadata (list tables, describe table columns, and indices):
 
