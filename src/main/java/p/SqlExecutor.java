@@ -54,6 +54,10 @@ public class SqlExecutor {
 	@Value("${printStatement:true}")
 	private boolean printStatement;
 
+	// Print row numbers.
+	@Value("${printRowNumbers:true}")
+	private boolean printRowNumbers;
+
 	// Write records to output after reaching limit.
 	@Value("${flushSize:50}")
 	private int flushSize;
@@ -326,6 +330,10 @@ public class SqlExecutor {
 
 			for(int i = 1; i < cc + 1; i++) {
 				if(resultSetDirection.equals("row")) {
+					if(i == 1 && printRowNumbers) {
+						rowData.append(rows + ") ");
+					}
+
 					rowData.append(rs.getString(i) + (i < cc ? fieldSeparator : ""));
 				} else {
 					if(i == 1) {
