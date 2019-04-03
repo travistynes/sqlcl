@@ -6,15 +6,19 @@ This is useful when you want to query a database on the command line, over SSH, 
 
 #### Build
 
-Create a .mavenrc file in your home directory if you don't have one, and add JAVA_HOME to tell maven which jdk to use:
+* Get [Maven](https://maven.apache.org/)
+* Get a [JDK](https://jdk.java.net/11/) (mininum Java 1.8)
+* Create a .mavenrc file in your home directory, and add JAVA_HOME to tell maven where your jdk is:
 
 ```
 JAVA_HOME=/path/to/jdk
 ```
 
-Build: ```mvn package```
+Build with: ```mvn package```
 
 This produces the application jar file at ./target/sqlcl-x.x.jar.
+
+Create a directory (we'll call it the application root) and place the jar there.
 
 #### Configure
 
