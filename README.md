@@ -74,7 +74,7 @@ cat query.sql | db --env=dev
 cat query.sql | db --env=prod
 ```
 
-By default, Sqlcl will use the config/application.properties file if the --env option is not specified.
+By default, Sqlcl will use the **config/application.properties** file if the --env option is not specified.
 
 #### Database metadata
 
@@ -85,6 +85,10 @@ db --tables=schema
 db --describe=schema.table
 db --index=schema.table
 ```
+
+#### Multi-statement support
+
+Multiple statements separated by semicolons will be executed in order, within a single transaction. If any statement fails, the transaction is rolled back. If all of the statements are successful, the transaction is committed.
 
 Sqlcl is a small tool that tries to do one thing well, and works best when chained together with other commands (see: [Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy)).
 
