@@ -19,6 +19,7 @@ import org.apache.commons.io.IOUtils;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import org.apache.commons.lang3.StringUtils;
 
 @Component
 public class SqlExecutor {
@@ -240,6 +241,18 @@ public class SqlExecutor {
 					if(statement.length() == 0) {
 						continue;
 					}
+
+					StringBuilder lines = new StringBuilder();
+					for(String line : Arrays.asList(statement.split("\n"))) {
+						// Strip leading comment characters // in case of SQLJ commented query.
+						lines.append(StringUtils.stripStart(line, "//"));
+
+						// Add newline back to preserve formatting.
+						lines.append("\n");
+					}
+
+					// Remove final newline so we don't log a blank line.
+					statement = StringUtils.stripEnd(lines.toString(), "\n");
 
 					if(statementIdx > 0) {
 						// Print statement separator from previous results.
