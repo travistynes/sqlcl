@@ -82,4 +82,21 @@ public class MainTest {
 
 		sqlExecutor.query(sql);
 	}
+
+	@Test
+	public void testCommitMode() throws Exception {
+		int count = jdbc.queryForObject("select count(*) c from public.a", Integer.class);
+
+		String sql = "insert into public.a (msg) values('Test message.')";
+		sqlExecutor.query(sql);
+
+		int i = jdbc.queryForObject("select count(*) c from public.a", Integer.class);
+		assertEquals(count + 1, i);
+
+		sqlExecutor.setAutoCommit(false);
+		sqlExecutor.query(sql);
+
+		int j = jdbc.queryForObject("select count(*) c from public.a", Integer.class);
+		assertEquals(i, j);
+	}
 }

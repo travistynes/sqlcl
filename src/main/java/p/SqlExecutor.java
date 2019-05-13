@@ -63,6 +63,10 @@ public class SqlExecutor {
 	@Value("${flushSize:50}")
 	private int flushSize;
 
+	// Commit or rollback transaction
+	@Value("${commit:true}")
+	private boolean commit;
+
 	public void execute() throws Exception {
 		if(describe != null) {
 			this.describeTable();
@@ -298,7 +302,11 @@ public class SqlExecutor {
 					}
 				}
 
-				c.commit();
+				if(commit) {
+					c.commit();
+				} else {
+					c.rollback();
+				}
 			} catch(Exception e) {
 				c.rollback();
 				log.info("Transaction rolled back.");
@@ -375,5 +383,9 @@ public class SqlExecutor {
 		}
 
 		return rows;
+	}
+
+	public void setAutoCommit(boolean commit) {
+		this.commit = commit;
 	}
 }
