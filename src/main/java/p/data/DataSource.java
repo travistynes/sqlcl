@@ -24,10 +24,16 @@ public class DataSource {
 	@Value("${db.url}")
 	private String url;
 
+	@Value("${printJdbcUrl:false}")
+	private boolean printJdbcUrl;
+
 	@Bean
 	@ConfigurationProperties(prefix = "db")
 	public javax.sql.DataSource pgDS() {
-		log.info("Database: " + url + "\n");
+		if(printJdbcUrl) {
+			log.info("Database: " + url + "\n");
+		}
+
 		javax.sql.DataSource ds =  DataSourceBuilder.create().build();
 
 		return ds;
