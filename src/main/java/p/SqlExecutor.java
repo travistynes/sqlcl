@@ -43,6 +43,14 @@ public class SqlExecutor {
 	@Value("${index:#{null}}")
 	private String index;
 
+	// List table indices using user defined query
+	@Value("${idx:#{null}}")
+	private String idx;
+
+	// List table indices
+	@Value("${indexQuery:#{null}}")
+	private String indexQuery;
+	
 	// Output field separator.
 	@Value("${fs:,}")
 	private String fieldSeparator;
@@ -73,7 +81,9 @@ public class SqlExecutor {
 		} else if(tables != null) {
 			this.listTables();
 		} else if(index != null) {
-			this.listIndex();
+			this.listIndex(false);
+		} else if(idx != null) {
+			this.listIndex(true);
 		} else {
 			String sql = IOUtils.toString(System.in, StandardCharsets.UTF_8);
 			this.query(sql);
@@ -166,11 +176,15 @@ public class SqlExecutor {
 		}
 	}
 
-	/*
-	 * List table indices.
+	/**
+	 * This method will use the database metadata to get index info.
+	 * I've had problems with insufficient priveleges using this method, while being
+	 * able to manually query tables for index info without issue. As a workaround,
+	 * the --idx option will use a query in the properties file instead
+	 * of using the JDBC database metadata.
 	 */
-	private void listIndex() throws Exception {
-		String[] parts = index.split("\\.");
+	private void listIndex(boolean userQuery) throws Exception {
+		String[] parts = userQuery ? idx.split("\\.") : index.split("\\.");
 
 		String catalog = null;
 		String schema = parts.length == 1 ? null : parts[0];
@@ -178,49 +192,77 @@ public class SqlExecutor {
 		boolean unique = false;
 		boolean approximate = false;
 
+		log.info("Index list: " + (parts.length == 1 ? table : schema + "." + table));
+		log.info("--------------------------------");
+
 		try(Connection c = dataSource.getConnection()) {
-			DatabaseMetaData metaData = c.getMetaData();
-			ResultSet rs = metaData.getIndexInfo(catalog, schema, table, unique, approximate);
+			if(!userQuery) {
+				DatabaseMetaData metaData = c.getMetaData();
+				ResultSet rs = metaData.getIndexInfo(catalog, schema, table, unique, approximate);
+				this.processIndex(rs);
+			} else if(indexQuery != null) {
+				try(PreparedStatement ps = c.prepareStatement(indexQuery)) {
+					if(schema == null) {
+						ps.setNull(1, java.sql.Types.VARCHAR);
+					} else {
+						ps.setString(1, schema);
+					}
 
-			int rows = 0;
-			StringBuilder data = new StringBuilder();
-			String currentIndex = "";
+					ps.setString(2, table);
 
-			while(rs.next()) {
-				rows++;
-
-				if(rows == 1) {
-					log.info(rs.getString("table_schem") + "." + rs.getString("table_name"));
+					ResultSet rs = ps.executeQuery();
+					this.processIndex(rs);
 				}
-
-				String indexName = rs.getString("index_name");
-				boolean isUnique = !rs.getBoolean("non_unique");
-
-				if(indexName == null) {
-					// Index name will be null when index type is statistics.
-					continue;
-				}
-
-				if(!currentIndex.equals(indexName)) {
-					// New index
-					currentIndex = indexName;
-					data.append("\n" + currentIndex + (isUnique ? " (unique)" : ""));
-					data.append("\n--------\n");
-				}
-
-				String columnName = rs.getString("column_name");
-				String order = rs.getString("asc_or_desc") == "A" ? "asc" : "desc";
-
-				data.append(columnName + " ");
-				data.append(order);
-				data.append("\n");
-			}
-
-			if(rows == 0) {
-				log.info("No data.");
 			} else {
-				log.info(data.toString().toLowerCase());
+				log.info("User defined indexQuery must be set in properties file.");
+				return;
 			}
+		}
+	}
+
+	private void processIndex(ResultSet rs) throws Exception {
+		int rows = 0;
+		StringBuilder data = new StringBuilder();
+		String currentIndex = "";
+
+		while(rs.next()) {
+			rows++;
+
+			String indexName = rs.getString("index_name");
+			boolean isUnique = !rs.getBoolean("non_unique");
+
+			if(indexName == null) {
+				// Index name will be null when index type is statistics.
+				continue;
+			}
+
+			if(!currentIndex.equals(indexName)) {
+				// New index
+				if(rows > 1) {
+					data.append("--------\n");
+				}
+
+				currentIndex = indexName;
+				data.append("Name: " + currentIndex + (isUnique ? " (unique)" : "") + "\n");
+			}
+
+			String columnPosition = rs.getString("ordinal_position");
+			String columnName = rs.getString("column_name");
+			String order = rs.getString("asc_or_desc");
+
+			data.append(columnPosition + ") " + columnName + " ");
+			data.append(order + "\n");
+		}
+
+		if(rows == 0) {
+			log.info("No data.");
+		} else {
+			// Strip last newline char.
+			String output = StringUtils.stripEnd(data.toString(), "\n");
+
+			log.info(output);
+			log.info("--------------------------------");
+			log.info("Total index count: " + rows);
 		}
 	}
 
