@@ -159,8 +159,8 @@ public class SqlExecutor {
 				String typeName = JDBCType.valueOf(rs.getInt("data_type")).getName();
 				int columnSize = rs.getInt("column_size");
 				int decimalDigits = rs.getInt("decimal_digits");
-				boolean isNullable = rs.getString("is_nullable") == "YES" ? true : false;
-				boolean isAutoIncrement = rs.getString("is_autoincrement") == "YES" ? true : false;
+				boolean isNullable = rs.getString("is_nullable").equalsIgnoreCase("YES") ? true : false;
+				boolean isAutoIncrement = rs.getString("is_autoincrement").equalsIgnoreCase("YES") ? true : false;
 
 				colData.append(columnName.toUpperCase() + " ");
 				colData.append(typeName.toLowerCase() + " ");
@@ -178,10 +178,11 @@ public class SqlExecutor {
 
 	/**
 	 * This method will use the database metadata to get index info.
-	 * I've had problems with insufficient priveleges using this method, while being
+	 * I've had problems with insufficient privileges using this method, while being
 	 * able to manually query tables for index info without issue. As a workaround,
 	 * the --idx option will use a query in the properties file instead
-	 * of using the JDBC database metadata.
+	 * of using the JDBC database metadata. Use the --idx option in environments where
+	 * necessary privileges cannot be granted to use the --index option.
 	 */
 	private void listIndex(boolean userQuery) throws Exception {
 		String[] parts = userQuery ? idx.split("\\.") : index.split("\\.");
